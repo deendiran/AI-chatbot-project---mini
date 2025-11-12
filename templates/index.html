@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h2>Chat with AI</h2>
+    <div id="chat"></div>
+    <input type="text" id="input" placeholder="Type your message here...">
+    <button onclick="send()">Send</button>
+
+    <script>
+  async function send() {
+    const msg = document.getElementById("input").value;
+    const chatBox = document.getElementById("chat");
+
+    // Display user message
+    chatBox.innerHTML += `<p><b>You:</b> ${msg}</p>`;
+
+    try {
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: msg})
+      });
+
+      const data = await res.json();
+
+      if (data.reply) {
+        chatBox.innerHTML += `<p><b>AI:</b> ${data.reply}</p>`;
+      } else if (data.error) {
+        chatBox.innerHTML += `<p style="color:red;"><b>Error:</b> ${data.error}</p>`;
+      } else {
+        chatBox.innerHTML += `<p style="color:red;"><b>AI:</b> Unexpected response.</p>`;
+      }
+    } catch (err) {
+      chatBox.innerHTML += `<p style="color:red;">Network error: ${err.message}</p>`;
+    }
+
+    document.getElementById("input").value = "";
+  }
+</script>
+
+</body>
+</html>
