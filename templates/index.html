@@ -1,47 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h2>Chat with AI</h2>
-    <div id="chat"></div>
-    <input type="text" id="input" placeholder="Type your message here...">
-    <button onclick="send()">Send</button>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Chatbot</title>
 
-    <script>
-  async function send() {
-    const msg = document.getElementById("input").value;
-    const chatBox = document.getElementById("chat");
-
-    // Display user message
-    chatBox.innerHTML += `<p><b>You:</b> ${msg}</p>`;
-
-    try {
-      const res = await fetch("/chat", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({message: msg})
-      });
-
-      const data = await res.json();
-
-      if (data.reply) {
-        chatBox.innerHTML += `<p><b>AI:</b> ${data.reply}</p>`;
-      } else if (data.error) {
-        chatBox.innerHTML += `<p style="color:red;"><b>Error:</b> ${data.error}</p>`;
-      } else {
-        chatBox.innerHTML += `<p style="color:red;"><b>AI:</b> Unexpected response.</p>`;
-      }
-    } catch (err) {
-      chatBox.innerHTML += `<p style="color:red;">Network error: ${err.message}</p>`;
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f3f4f6;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
-    document.getElementById("input").value = "";
-  }
-</script>
+    .chat-container {
+      width: 400px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
 
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    #chat {
+      flex-grow: 1;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 8px;
+      background-color: #fafafa;
+      margin-bottom: 15px;
+    }
+
+    .message {
+      margin: 8px 0;
+      line-height: 1.4;
+    }
+
+    .user {
+      text-align: right;
+      color: #2563eb;
+      font-weight: 500;
+    }
+
+    .ai {
+      text-align: left;
+      color: #111827;
+    }
+
+    #input {
+      width: calc(100% - 80px);
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-size: 14px;
+    }
+
+    button {
+      width: 60px;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    button:hover {
+      background-color: #1e40af;
+    }
+
+    .typing {
+      font-style: italic;
+      color: #6b7280;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="chat-container">
+    <h2>Chat with AI</h2>
+    <div id="chat"></div>
+    <div style="display: flex; gap: 8px;">
+      <input type="text" id="input" placeholder="Say something..." />
+      <button onclick="send()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    async function send() {
+      const msg = document.getElementById("input").value.trim();
+      const chatBox = document.getElementById("chat");
+      if (!msg) return;
+
+      chatBox.innerHTML += `<div class='message user'><b>You:</b> ${msg}</div>`;
+      chatBox.innerHTML += `<div id='typing' class='typing'>AI is typing...</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      document.getElementById("input").value = "";
+
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: msg }),
+        });
+
+        const data = await res.json();
+        document.getElementById("typing").remove();
+
+        if (data.reply) {
+          chatBox.innerHTML += `<div class='message ai'><b>AI:</b> ${data.reply}</div>`;
+        } else if (data.error) {
+          chatBox.innerHTML += `<div class='message ai' style='color:red;'><b>Error:</b> ${data.error}</div>`;
+        }
+      } catch (err) {
+        document.getElementById("typing").remove();
+        chatBox.innerHTML += `<div class='message ai' style='color:red;'>Network error: ${err.message}</div>`;
+      }
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    document.getElementById("input").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") send();
+    });
+  </script>
 </body>
 </html>
